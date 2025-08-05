@@ -384,6 +384,18 @@ typedef struct {
     int32_t ignore_ref;
 } AomFilmGrain;
 
+
+/**
+ * @brief Structure containing frame cropping area parameteres.
+ */
+typedef struct AomFilmGrainCrop {
+    bool     enabled;
+    double   width_percent;
+    double   height_percent;
+    double   crop_offset_x_percent;
+    double   crop_offset_y_percent;
+} AomFilmGrainCrop;
+
 /**
 CPU FLAGS
 */

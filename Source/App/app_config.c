@@ -90,6 +90,7 @@
 #define LEVEL_TOKEN "--level"
 #define FILM_GRAIN_TOKEN "--film-grain"
 #define FILM_GRAIN_DENOISE_APPLY_TOKEN "--film-grain-denoise"
+#define FILM_GRAIN_CROP_TOKEN "--film-grain-crop"
 #define INTRA_REFRESH_TYPE_TOKEN "--irefresh-type" // no Eval
 #define CDEF_ENABLE_TOKEN "--enable-cdef"
 #define SCREEN_CONTENT_TOKEN "--scm"
@@ -1138,6 +1139,11 @@ ConfigEntry config_entry_specific[] = {
      "1: level of denoising is set by the film-grain parameter]",
      set_cfg_generic_token},
 
+    {SINGLE_INPUT,
+     FILM_GRAIN_CROP_TOKEN,
+     "Set film grain estimation crop area in format <width_%>:<height_%>[:<offset_x_%>:<offset_y_%>], default is 100:100:0:0 (full frame) [0-100:0-100:0-100:0-100]",
+     set_cfg_generic_token},
+
     {SINGLE_INPUT, FGS_TABLE_TOKEN, "Set the film grain model table path", set_cfg_fgs_table_path},
 
     // --- start: SUPER-RESOLUTION SUPPORT
@@ -1423,6 +1429,7 @@ ConfigEntry config_entry[] = {
     {SINGLE_INPUT, SCREEN_CONTENT_TOKEN, "ScreenContentMode", set_cfg_generic_token},
     {SINGLE_INPUT, FILM_GRAIN_TOKEN, "FilmGrain", set_cfg_generic_token},
     {SINGLE_INPUT, FILM_GRAIN_DENOISE_APPLY_TOKEN, "FilmGrainDenoise", set_cfg_generic_token},
+    {SINGLE_INPUT, FILM_GRAIN_CROP_TOKEN, "FilmGrainCrop", set_cfg_generic_token},
     {SINGLE_INPUT, FGS_TABLE_TOKEN, "FilmGrainTable", set_cfg_fgs_table_path},
 
     //   Super-resolution support

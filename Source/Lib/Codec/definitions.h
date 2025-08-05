@@ -2056,6 +2056,8 @@ static const EbWarpedMotionParams default_warp_params = {
 #define INPUT_SIZE_4K_TH                    0x140A000    // 21 Million
 #define INPUT_SIZE_8K_TH                    0X5028000    // 84 Million
 #define EB_OUTPUTSTREAMBUFFERSIZE_MACRO(ResolutionSize)                ((ResolutionSize) < (INPUT_SIZE_720p_TH) ? 0x1E8480 : 0x2DC6C0)
+
+#define ALIGN_DOWN(val, align) ((val) & ~((align) - 1))
 /** Redefine ASSERT() to avoid warnings
 */
 #if defined _DEBUG || _DEBUG_
