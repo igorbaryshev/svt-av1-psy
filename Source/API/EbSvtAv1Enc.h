@@ -589,6 +589,17 @@ typedef struct EbSvtAv1EncConfiguration {
      */
     AomFilmGrainCrop film_grain_crop;
 
+    /**
+     * @brief Film grain estimation interval.
+     *
+     * This parameter controls how often the film grain estimation is performed.
+     * 1: Estimate every frame (default).
+     * 2-50: Estimate every N-th frame.
+     *
+     * Default is 1.
+     */
+    uint32_t film_grain_estimation_interval;
+
     /* CDEF Level
     *
     * Default is -1. */

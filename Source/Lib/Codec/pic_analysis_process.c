@@ -19,6 +19,7 @@
 #include "pcs.h"
 #include "sequence_control_set.h"
 #include "pic_buffer_desc.h"
+#include "svt_time.h"
 
 #include "resource_coordination_results.h"
 #include "pic_analysis_process.h"
@@ -1190,6 +1191,52 @@ static EbErrorType denoise_estimate_film_grain(SequenceControlSet *scs, PictureP
     return return_error; //todo: add proper error handling
 }
 
+static EbErrorType replace_film_grain_params(AomFilmGrain *src, PictureParentControlSet *pcs_ptr) {
+    AomFilmGrain *dst = &pcs_ptr->frm_hdr.film_grain_params;
+
+    // Preserve the original random seed
+    const uint16_t seed = dst->random_seed;
+
+    // Efficiently copy film grain parameters excluding random_seed
+    if (svt_memcpy != NULL) {
+        svt_memcpy(dst, src, sizeof(*dst));
+    } else {
+        svt_memcpy_c(dst, src, sizeof(*dst));
+    }
+    dst->random_seed = seed;
+
+    return EB_ErrorNone;
+}
+
+static EbErrorType process_film_grain_interval(SequenceControlSet *scs_ptr, PictureParentControlSet *pcs_ptr) {
+    const uint32_t      picture_number = pcs_ptr->picture_number;
+    const uint32_t      interval       = scs_ptr->static_config.film_grain_estimation_interval;
+    FilmGrainParamSlot *fg_param_ring  = scs_ptr->fg_param_ring;
+    uint32_t            slot_num       = (picture_number / interval) % FG_PARAM_RING_SIZE;
+    FilmGrainParamSlot *slot           = &fg_param_ring[slot_num];
+    AomFilmGrain       *last_fg_params = &scs_ptr->last_fg_params;
+
+    if (picture_number % interval == 0) {
+        denoise_estimate_film_grain(scs_ptr, pcs_ptr);
+        if (scs_ptr->picture_analysis_process_init_count > 1) {
+            *slot = (FilmGrainParamSlot){.params       = pcs_ptr->frm_hdr.film_grain_params, 
+                                         .frame_number = picture_number};
+        } else {
+            *last_fg_params = pcs_ptr->frm_hdr.film_grain_params;
+        }
+    } else if (scs_ptr->picture_analysis_process_init_count > 1) {
+        uint32_t target_frame = picture_number - (picture_number % interval);
+        while (fg_param_ring[slot_num].frame_number != target_frame) {
+            svt_av1_sleep(1);
+        }
+        replace_film_grain_params(&slot->params, pcs_ptr);
+    } else {
+        replace_film_grain_params(last_fg_params, pcs_ptr);
+    }
+
+    return EB_ErrorNone;
+}
+
 static EbErrorType apply_film_grain_table(SequenceControlSet *scs_ptr, PictureParentControlSet *pcs_ptr) {
     FrameHeader  *frm_hdr     = &pcs_ptr->frm_hdr;
     AomFilmGrain *dst_grain   = &frm_hdr->film_grain_params;
@@ -1224,7 +1271,10 @@ void svt_aom_picture_pre_processing_operations(PictureParentControlSet *pcs, Seq
     if (scs->static_config.fgs_table) {
         apply_film_grain_table(scs, pcs);
     } else if (scs->static_config.film_grain_denoise_strength) {
-        denoise_estimate_film_grain(scs, pcs);
+        if (scs->static_config.film_grain_estimation_interval == 1)
+            denoise_estimate_film_grain(scs, pcs);
+        else
+            process_film_grain_interval(scs, pcs);
     }
 #else
     (void)pcs;

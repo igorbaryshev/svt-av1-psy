@@ -53,6 +53,14 @@ typedef struct QpBasedThScaling {
     bool pme_qp_based_th_scaling;
     bool txt_qp_based_th_scaling;
 } QpBasedThScaling;
+// Film grain parameter ring buffer for multi-threaded estimation reuse
+#define FG_PARAM_RING_SIZE 128
+
+typedef struct {
+    AomFilmGrain params;
+    uint64_t frame_number;
+} FilmGrainParamSlot;
+
 /************************************
      * Sequence Control Set
      ************************************/
@@ -119,6 +127,10 @@ typedef struct SequenceControlSet {
     uint8_t enable_dg;
     /*!< Film grain seed */
     uint16_t film_grain_random_seed;
+    /*!< Film grain ring buffer */
+    FilmGrainParamSlot fg_param_ring[FG_PARAM_RING_SIZE];
+    AomFilmGrain last_fg_params; // first frame film grain parameters
+    bool last_fg_params_ready; // first frame film grain parameters ready
     /*!< over_boundary_block: pad resolution to a multiple of SB for smaller overhead
         (The signal changes per preset; 0: No over boundary blk allowed, 1: over boundary blk allowed) Default is 1.
         to enable when md_skip_blk is on */
