@@ -14,11 +14,30 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#ifdef MIMALLOC_FOUND
+#include <mimalloc.h>
+#include <mimalloc-new-delete.h>
+#pragma comment(linker, "/include:mi_version")
+#endif
 #ifdef LIBDOVI_FOUND
+#if _MSC_VER
+#include "../dovi/msvc/include/libdovi/rpu_parser.h"
+#pragma comment(lib, "ntdll.lib")
+#pragma comment(lib, "userenv.lib")
+#pragma comment(lib, "ws2_32.lib")
+#elif __GNUC__
 #include <libdovi/rpu_parser.h>
 #endif
+#endif
 #ifdef LIBHDR10PLUS_RS_FOUND
+#if _MSC_VER
+#include "../hdr/msvc/include/libhdr10plus-rs/hdr10plus.h"
+#pragma comment(lib, "ntdll.lib")
+#pragma comment(lib, "userenv.lib")
+#pragma comment(lib, "ws2_32.lib")
+#elif __GNUC__
 #include <libhdr10plus-rs/hdr10plus.h>
+#endif
 #endif
 
 #include "EbSvtAv1Enc.h"
