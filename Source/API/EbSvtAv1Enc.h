@@ -584,6 +584,11 @@ typedef struct EbSvtAv1EncConfiguration {
     * Default is 0. */
     uint8_t film_grain_denoise_apply;
 
+    /**
+     * @brief Stores film grain cropping area parameters.
+     */
+    AomFilmGrainCrop film_grain_crop;
+
     /* CDEF Level
     *
     * Default is -1. */
