@@ -1263,8 +1263,7 @@ void svt_av1_print_lib_params(SequenceControlSet *scs) {
 
         switch (config->enable_tf) {
         case 1:
-            if (config->tf_strength != 3)
-                SVT_INFO("SVT [config]: temporal filtering strength \t\t\t\t\t: %d\n", config->tf_strength);
+            SVT_INFO("SVT [config]: temporal filtering strength / keyframe TF strength \t\t: %d / %d\n", config->tf_strength, config->kf_tf_strength);
             break;
         case 2: SVT_INFO("SVT [config]: temporal filtering strength \t\t\t\t\t: auto\n"); break;
         default: break;
@@ -1276,11 +1275,6 @@ void svt_av1_print_lib_params(SequenceControlSet *scs) {
         if (config->noise_norm_strength >= 0) {
             SVT_INFO("SVT [config]: Noise Normalization Strength \t\t\t\t\t: %d\n",
                 config->noise_norm_strength);
-        }
-
-        if (config->kf_tf_strength > 0 && config->enable_tf == 1) {
-            SVT_INFO("SVT [config]: Keyframe TF Strength \t\t\t\t\t\t: %d\n",
-                config->kf_tf_strength);
         }
 
         if (config->ac_bias > 0.0) {
