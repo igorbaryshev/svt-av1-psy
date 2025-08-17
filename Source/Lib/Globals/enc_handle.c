@@ -725,7 +725,7 @@ static EbErrorType load_default_buffer_configuration_settings(
         scs->total_process_init_count += (scs->rest_process_init_count = 1);
     }
     else if (lp <= PARALLEL_LEVEL_2) {
-        const uint8_t pa_processes = scs->static_config.film_grain_denoise_strength ? 16 : 1;
+        const uint8_t pa_processes = (scs->static_config.film_grain_denoise_strength && scs->static_config.film_grain_estimation_interval == 1) ? 16 : 1;
         scs->total_process_init_count += (scs->source_based_operations_process_init_count = 1);
         scs->total_process_init_count += (scs->picture_analysis_process_init_count = clamp(pa_processes, 1, max_pa_proc));
         scs->total_process_init_count += (scs->motion_estimation_process_init_count = clamp(20, 1, max_me_proc));
@@ -738,7 +738,7 @@ static EbErrorType load_default_buffer_configuration_settings(
         scs->total_process_init_count += (scs->rest_process_init_count = clamp(1, 1, max_rest_proc));
     }
     else if (lp <= PARALLEL_LEVEL_3) {
-        const uint8_t pa_processes = scs->static_config.film_grain_denoise_strength ? 16 : 1;
+        const uint8_t pa_processes = (scs->static_config.film_grain_denoise_strength && scs->static_config.film_grain_estimation_interval == 1) ? 16 : 1;
         scs->total_process_init_count += (scs->source_based_operations_process_init_count = 1);
         scs->total_process_init_count += (scs->picture_analysis_process_init_count = clamp(pa_processes, 1, max_pa_proc));
         scs->total_process_init_count += (scs->motion_estimation_process_init_count = clamp(25, 1, max_me_proc));
@@ -784,6 +784,7 @@ static EbErrorType load_default_buffer_configuration_settings(
     if (scs->static_config.pass == 0 || scs->static_config.pass == 2) {
         SVT_INFO("Level of Parallelism: %u\n", lp);
         SVT_INFO("Number of PPCS %u\n", scs->picture_control_set_pool_init_count);
+        SVT_INFO("Number of PAs %u\n", scs->picture_analysis_process_init_count);
 
         /******************************************************************
         * Platform detection, limit cpu flags to hardware available CPU
