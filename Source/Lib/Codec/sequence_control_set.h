@@ -59,6 +59,7 @@ typedef struct QpBasedThScaling {
 typedef struct {
     AomFilmGrain params;
     uint64_t frame_number;
+    bool ready;
 } FilmGrainParamSlot;
 
 /************************************

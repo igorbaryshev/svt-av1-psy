@@ -1220,13 +1220,14 @@ static EbErrorType process_film_grain_interval(SequenceControlSet *scs_ptr, Pict
         denoise_estimate_film_grain(scs_ptr, pcs_ptr);
         if (scs_ptr->picture_analysis_process_init_count > 1) {
             *slot = (FilmGrainParamSlot){.params       = pcs_ptr->frm_hdr.film_grain_params, 
-                                         .frame_number = picture_number};
+                                         .frame_number = picture_number,
+                                         .ready        = true};
         } else {
             *last_fg_params = pcs_ptr->frm_hdr.film_grain_params;
         }
     } else if (scs_ptr->picture_analysis_process_init_count > 1) {
         uint32_t target_frame = picture_number - (picture_number % interval);
-        while (fg_param_ring[slot_num].frame_number != target_frame) {
+        while (fg_param_ring[slot_num].frame_number != target_frame || !fg_param_ring[slot_num].ready) {
             svt_av1_sleep(1);
         }
         replace_film_grain_params(&slot->params, pcs_ptr);
