@@ -221,7 +221,7 @@
 #define SHARP_TX_TOKEN "--sharp-tx"
 #define HBD_MDS_TOKEN "--hbd-mds"
 #define COMPLEX_HVS_TOKEN "--complex-hvs"
-#define FILTERING_NOISE_DETECTION_TOKEN "--filtering-noise-detection"
+#define NOISE_ADAPTIVE_FILTERING_TOKEN "--noise-adaptive-filtering"
 
 static EbErrorType validate_error(EbErrorType err, const char *token, const char *value) {
     switch (err) {
@@ -714,7 +714,7 @@ ConfigEntry config_entry_options[] = {
     {SINGLE_INPUT,
      PRESET_TOKEN,
      "Encoder preset, presets < 0 are for debugging. Higher presets means faster encodes, but with "
-     "a quality tradeoff, default is 10 [-1-13]",
+     "a quality tradeoff, default is 8 [-1-13]",
      set_cfg_generic_token},
 
     {SINGLE_INPUT,
@@ -974,7 +974,7 @@ ConfigEntry config_entry_rc[] = {
      "GOP max bitrate (expressed as a percentage of the target rate), default is 2000 [0-10000]",
      set_cfg_generic_token},
     {SINGLE_INPUT, ENABLE_QM_TOKEN, "Enable quantisation matrices, default is 1 [0-1]", set_cfg_generic_token},
-    {SINGLE_INPUT, MIN_QM_LEVEL_TOKEN, "Min quant matrix flatness, default is 2 [0-15]", set_cfg_generic_token},
+    {SINGLE_INPUT, MIN_QM_LEVEL_TOKEN, "Min quant matrix flatness, default is 4 [0-15]", set_cfg_generic_token},
     {SINGLE_INPUT, MAX_QM_LEVEL_TOKEN, "Max quant matrix flatness, default is 15 [0-15]", set_cfg_generic_token},
     {SINGLE_INPUT,
      ROI_MAP_FILE_TOKEN,
@@ -1117,7 +1117,7 @@ ConfigEntry config_entry_specific[] = {
     {SINGLE_INPUT,
      TUNE_TOKEN,
      "Optimize the encoding process for different desired outcomes [0 = VQ, 1 = PSNR, 2 = SSIM, 3 = Subjective SSIM, 4 = Still Picture], "
-     "default is 2 "
+     "default is 0 "
      "[0-4]",
      set_cfg_generic_token},
     // MD Parameters
@@ -1277,7 +1277,7 @@ ConfigEntry config_entry_variance_boost[] = {
     //Alt-ref temporal filtering strength on keyframes
     {SINGLE_INPUT, KF_TF_STRENGTH_FILTER_TOKEN, "[PSY] Adjust alt-ref TF strength on keyframes, default is 1 (4x weaker than mainline) [0-4]", set_cfg_generic_token},
     //Psy-rd
-    {SINGLE_INPUT, PSY_RD_TOKEN, "[PSY] Psychovisual rate distortion strength, default is 0.5; high quality mode activated at >=0.6 and <=P6 (P-1 enables complex HVS model) [0.0-6.0]", set_cfg_generic_token},
+    {SINGLE_INPUT, PSY_RD_TOKEN, "[PSY] Psychovisual rate distortion strength, default is 1.0; high quality mode activated at >=1.2 and <=P6 (P-1 enables complex HVS model) [0.0-6.0]", set_cfg_generic_token},
     //Spy-rd
     {SINGLE_INPUT, SPY_RD_TOKEN, "[PSY] Alternative psychovisual rate distortion pathways, default is 0 [0-2]; 1 = full, 2 = partial", set_cfg_generic_token},
     //Low Q Taper
@@ -1288,8 +1288,8 @@ ConfigEntry config_entry_variance_boost[] = {
     {SINGLE_INPUT, HBD_MDS_TOKEN, "[PSY] High Bit-Depth Mode Decision, default is 0 [0: default preset behavior, 1 = 10-bit, 2 = hybrid 8/10-bit, 3 = 8-bit]", set_cfg_generic_token},
     //Complex HVS
     {SINGLE_INPUT, COMPLEX_HVS_TOKEN, "[PSY] Enable highest complexity HVS model, default is 0 [0: default preset behavior, 1: complex HVS model based on PSNR-HVS]", set_cfg_generic_token},
-    //Filtering noise detection
-    {SINGLE_INPUT, FILTERING_NOISE_DETECTION_TOKEN, "[PSY] Control noise detection for CDEF/restoration filtering, default is 0 [0: default tune behavior, 1: on, 2: off, 3: on (CDEF only), 4: on (restoration only)]", set_cfg_generic_token},
+    //Noise adaptive filtering
+    {SINGLE_INPUT, NOISE_ADAPTIVE_FILTERING_TOKEN, "[PSY] Control noise detection for CDEF/restoration filtering, default is 0 to make tune 0/3 more balanced [0: off, 1: both CDEF and restoration noise-adaptive filtering are on, 2: default tune behavior, 3: noise-adaptive CDEF only, 4: noise-adaptive restoration only)]", set_cfg_generic_token},
     // Termination
     {SINGLE_INPUT, NULL, NULL, NULL}};
 
@@ -1521,8 +1521,8 @@ ConfigEntry config_entry[] = {
     // Complex HVS
     {SINGLE_INPUT, COMPLEX_HVS_TOKEN, "ComplexHVS", set_cfg_generic_token},
 
-    // Filtering noise detection
-    {SINGLE_INPUT, FILTERING_NOISE_DETECTION_TOKEN, "FilteringNoiseDetection", set_cfg_generic_token},
+    // Noise adaptive filtering
+    {SINGLE_INPUT, NOISE_ADAPTIVE_FILTERING_TOKEN, "NoiseAdaptiveFiltering", set_cfg_generic_token},
 
     // Termination
     {SINGLE_INPUT, NULL, NULL, NULL}};
@@ -2053,14 +2053,14 @@ int get_version(int argc, char *argv[]) {
 #endif
     if (find_token(argc, argv, VERSION_TOKEN, NULL))
         return 0;
-    printf("SVT-AV1-PSY %s (%s)\n", svt_av1_get_version(), debug_build ? "release" : "debug");
+    printf("SVT-AV1-PSYEX %s (%s)\n", svt_av1_get_version(), debug_build ? "release" : "debug");
 #if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
-    printf("PSY Release: %s\n", svt_psy_get_version());
+    printf("PSYEX Release: %s\n", svt_psy_get_version());
 #else
     if (strcmp(svt_psy_get_version(), "N/A")) {
-        printf("PSY Release: \x1b[32m%s\x1b[0m\n", svt_psy_get_version());
+        printf("PSYEX Release: \x1b[32m%s\x1b[0m\n", svt_psy_get_version());
     } else {
-        printf("PSY Release: \x1b[38;5;248m%s\x1b[0m\n", svt_psy_get_version());
+        printf("PSYEX Release: \x1b[38;5;248m%s\x1b[0m\n", svt_psy_get_version());
     }
 #endif
     return 1;

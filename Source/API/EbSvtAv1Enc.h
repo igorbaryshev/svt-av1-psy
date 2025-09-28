@@ -804,9 +804,9 @@ typedef struct EbSvtAv1EncConfiguration {
     bool enable_qm;
     /**
      * @brief Min quant matrix flatness. Applicable when enable_qm is true.
-     * Min value is 0.
+     * Min value is 4.
      * Max value is 15.
-     * Default is 0 in SVT-AV1-PSY, mainline default is 8.
+     * Default is 4 in SVT-AV1-PSYEX, mainline default is 0.
      */
     uint8_t min_qm_level;
     /**
@@ -915,7 +915,7 @@ typedef struct EbSvtAv1EncConfiguration {
     /* @brief Bias towards decreased/increased sharpness in the deblocking loop filter & during rate distortion
      * Minimum value is -7 (less sharp).
      * Maximum value is 7 (more sharp).
-     * Default is 1 in svt-av1-psy (medium sharpness). */
+     * Default is 1 in svt-av1-psyex (medium sharpness). */
     int8_t sharpness;
 
     /* @brief Enable the user to configure which curve variance boost uses.
@@ -973,7 +973,7 @@ typedef struct EbSvtAv1EncConfiguration {
      * @brief Min quant matrix flatness. Applicable when enable_qm is true.
      * Min value is 0.
      * Max value is 15.
-     * Default is 8.
+     * Default is 10.
      */
     uint8_t min_chroma_qm_level;
     /**
@@ -1066,14 +1066,14 @@ typedef struct EbSvtAv1EncConfiguration {
 
      /**
      * @brief Controls noise detection for CDEF/restoration filtering
-     * 0: default tune behavior
-     * 1: on
-     * 2: off
-     * 2: on (CDEF only)
-     * 3: on (restoration only)
+     * 0: off
+     * 1: always-on noise-adaptive filters
+     * 2: default tune behavior
+     * 2: noise-adaptive CDEF only
+     * 3: noise-adaptive restoration filtering only
      * Default is 0
      */
-     uint8_t filtering_noise_detection;
+     uint8_t noise_adaptive_filtering;
 
     /*Add 128 Byte Padding to Struct to avoid changing the size of the public configuration struct*/
     uint8_t padding[128 - 3 * sizeof(bool) - 10 * sizeof(uint8_t) - 2 * sizeof(double)];
