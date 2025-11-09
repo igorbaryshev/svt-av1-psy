@@ -2071,6 +2071,22 @@ uint32_t get_help(int32_t argc, char *const argv[]) {
     if (find_token(argc, argv, HELP_TOKEN, config_string))
         return 0;
 
+#if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
+    printf(
+        "Usage: SvtAv1EncApp <options> <-b dst_filename> -i src_filename\n"
+        "\n"
+        "Examples:\n"
+        "Multi-pass encode (VBR):\n"
+        "    SvtAv1EncApp <--stats svtav1_2pass.log> --passes 2 --rc 1 --tbr 1000 -b dst_filename "
+        "-i src_filename\n"
+        "Multi-pass encode (CRF):\n"
+        "    SvtAv1EncApp <--stats svtav1_2pass.log> --passes 2 --rc 0 --crf 43 -b dst_filename -i "
+        "src_filename\n"
+        "Single-pass encode (VBR):\n"
+        "    SvtAv1EncApp --passes 1 --rc 1 --tbr 1000 -b dst_filename -i src_filename\n"
+        "\n"
+        "Options:\n");
+#else
     printf(
         "\x1b[1;4mUsage\x1b[0m: SvtAv1EncApp <options> <-b dst_filename> -i src_filename\n"
         "\n"
@@ -2085,6 +2101,7 @@ uint32_t get_help(int32_t argc, char *const argv[]) {
         "    SvtAv1EncApp --passes 1 --rc 1 --tbr 1000 -b dst_filename -i src_filename\n"
         "\n"
         "\x1b[1;4mOptions\x1b[0m:\n");
+#endif
     for (ConfigEntry *options_token_index = config_entry_options; options_token_index->token; ++options_token_index) {
         // this only works if short and long token are one after another
         switch (check_long(*options_token_index, options_token_index[1])) {
@@ -2101,7 +2118,11 @@ uint32_t get_help(int32_t argc, char *const argv[]) {
                    options_token_index->name);
         }
     }
+#if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
+    printf("\nEncoder Global Options:\n");
+#else
     printf("\n\x1b[1;4mEncoder Global Options\x1b[0m:\n");
+#endif
     for (ConfigEntry *global_options_token_index = config_entry_global_options; global_options_token_index->token;
          ++global_options_token_index) {
         switch (check_long(*global_options_token_index, global_options_token_index[1])) {
@@ -2118,7 +2139,11 @@ uint32_t get_help(int32_t argc, char *const argv[]) {
                    global_options_token_index->name);
         }
     }
+#if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
+    printf("\nRate Control Options:\n");
+#else
     printf("\n\x1b[1;4mRate Control Options\x1b[0m:\n");
+#endif
     for (ConfigEntry *rc_token_index = config_entry_rc; rc_token_index->token; ++rc_token_index) {
         switch (check_long(*rc_token_index, rc_token_index[1])) {
         case 1:
@@ -2131,7 +2156,11 @@ uint32_t get_help(int32_t argc, char *const argv[]) {
                    rc_token_index->name);
         }
     }
+#if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
+    printf("\nMulti-pass Options:\n");
+#else
     printf("\n\x1b[1;4mMulti-pass Options\x1b[0m:\n");
+#endif
     for (ConfigEntry *two_p_token_index = config_entry_2p; two_p_token_index->token; ++two_p_token_index) {
         switch (check_long(*two_p_token_index, two_p_token_index[1])) {
         case 1:
@@ -2147,7 +2176,11 @@ uint32_t get_help(int32_t argc, char *const argv[]) {
                    two_p_token_index->name);
         }
     }
+#if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
+    printf("\nGOP Size & Type Options:\n");
+#else
     printf("\n\x1b[1;4mGOP Size & Type Options\x1b[0m:\n");
+#endif
     for (ConfigEntry *kf_token_index = config_entry_intra_refresh; kf_token_index->token; ++kf_token_index) {
         switch (check_long(*kf_token_index, kf_token_index[1])) {
         case 1:
@@ -2160,7 +2193,11 @@ uint32_t get_help(int32_t argc, char *const argv[]) {
                    kf_token_index->name);
         }
     }
+#if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
+    printf("\nAV1 Specific Options:\n");
+#else
     printf("\n\x1b[1;4mAV1 Specific Options\x1b[0m:\n");
+#endif
     for (ConfigEntry *sp_token_index = config_entry_specific; sp_token_index->token; ++sp_token_index) {
         switch (check_long(*sp_token_index, sp_token_index[1])) {
         case 1:
@@ -2173,7 +2210,11 @@ uint32_t get_help(int32_t argc, char *const argv[]) {
                    sp_token_index->name);
         }
     }
+#if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
+    printf("\nColor Description Options:\n");
+#else
     printf("\n\x1b[1;4mColor Description Options\x1b[0m:\n");
+#endif
     for (ConfigEntry *cd_token_index = config_entry_color_description; cd_token_index->token; ++cd_token_index) {
         switch (check_long(*cd_token_index, cd_token_index[1])) {
         case 1:
@@ -2186,8 +2227,11 @@ uint32_t get_help(int32_t argc, char *const argv[]) {
                    cd_token_index->name);
         }
     }
-
+#if defined(_WIN64) || defined(_MSC_VER) || defined(_WIN32)
+    printf("\nPsychovisual Options:\n");
+#else
     printf("\n\x1b[1;4mPsychovisual Options\x1b[0m:\n");
+#endif
     for (ConfigEntry *cd_token_index = config_entry_variance_boost; cd_token_index->token; ++cd_token_index) {
         switch (check_long(*cd_token_index, cd_token_index[1])) {
         case 1:
