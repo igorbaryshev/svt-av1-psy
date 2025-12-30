@@ -1,60 +1,79 @@
 # An exotic, extended, exciting continuation of SVT-AV1-PSY: SVT-AV1-PSYEX
 
-Since the original SVT-AV1-PSY project was sunset because Gianni couldn't work on it anymore, I decided to build svt-av1-psyex: a way for me and others to develop svt-av1-psy in novel ways to attain the best visual fidelity at all quality levels when performing video compression.
+Since the original SVT-AV1-PSY project was sunset, I decided to build svt-av1-psyex: a way for all of us to develop the best open AV1 video encoder in novel ways to attain the best visual fidelity at all quality levels when compressing videos.
 
 As such, SVT-AV1-PSYEX is the Scalable Video Technology Psychovisually Extended with advanced perceptual improvements, additions and tuning for psychovisually optimal media encoding. The goal is to create the best encoding implementation for perceptual quality with AV1. We may or may not implement bleeding edge features, optimizations and even extend mainline features beyond their intended purpose.
 
 
-### Recommended general settings for 5 use cases, with a BlueSwordM bonus
+### The biggest change to SVT-AV1-PSYEX 3.0.2-B: tune 0
 
-For further explanations into most of the advanced parameters that aren't present in mainline svt-av1, you can read below in the features addition section.
+Compared to previous SVT-AV1-PSYEX versions, svt-av1-psyex 3.0.2-B has superior default settings. The main change relates to the visual tune: tune 0 has been made default in place of tune 1.
+This has been done to improve visual quality on the side of fidelity. However, just changing the default from tune 1 to tune 0 would have increased encoding artifacts considerably. 
 
-Important caveat: for the written recommendations written below, we assume that you're using Preset 6 and slower. Ideally, Preset 1-4 should be used for maximum
-visual performance.
+For this reason, I set `--noise-adaptive-filtering 0` by default, which disables noise-adaptive CDEF and restoration filters. This restores original CDEF and restoration filter applications similar to tune 1/tune 2.
 
-- `High Fidelity (Demanding content, higher bitrates for live-action/CG/demanding animu)`
+Normally in tune 0/3, noise-adaptive CDEF and restoration filters are enabled: if noise levels are high enough, CDEF and restoration filtering get completely disabled. This has the effect of increasing sharpness levels quite a bit in some scenarios.
 
-`--preset X --complex-hvs 1 --crf XX --enable-cdef 0 --noise-norm-strength 3 --enable-qm 1 --qm-min 8 --qm-max 15 --chroma-qm-min 10 --chroma-qm-max 15 --keyint 240 --tune 0 --sharpness 1 --aq-mode 2 --qp-scale-compress-strength 2 --scm 0 --kf-tf-strength 1 --tf-strength 1 --psy-rd 3.0 --variance-boost-strength 2`
+However, at lower bitrates and for lots of 2D animated content, completely disabling those filters when there's just a bit of noise, can wreck image stability and/or quality around lines. In the past with previous svt-av1 and svt-av1-psy, this tradeoff was worth it since there weren't other ways to boost image quality; today is a completely different story with much more powerful psychovisual options.
 
-This settings string is mainly targeted at those that want high encoding fidelity for demanding content, mostly aimed at detailed content with a nice amount
-of noise/grain/shadow/high frequency detail. This doesn't go too overboard with aggressive settings. If you want slightly more detail, you can add `--spy-rd 2`.
+This allowed us to set `--tune 0 --noise-adaptive-filtering 0` and still get higher visual quality than the previously set `--tune 1` in svt-av1-psyex 3.0.2-A in almost all encoding scenarios as well!
 
-- `Grainy Fidelity (you want to retain that grain at any cost? This is for you, but please, play with the settings until you find what's best for you)`
+If you want previous tune 0 behavior, you can set `--noise-adaptive-filters 1`. **Do note that 1 enables both noise-adaptive CDEF and restoration filtering at all times**, _for all presets_. `--noise-adaptive-filtering 1` can be forced to all tunes, which can be useful if you want to make `--tune 2` behave more closely to `--tune 3`.
 
-`--preset X --complex-hvs 1 --crf XX --enable-cdef 0 --enable-restoration 0 --enable-tf 0 --spy-rd 1 --noise-norm-strength 3 --enable-qm 1 --qm-min 10 --qm-max 15 --chroma-qm-min 12 --chroma-qm-max 15 --keyint 240 --tune 0 --sharpness 1 --aq-mode 2 --qp-scale-compress-strength 3 --scm 0 --psy-rd 4.0 --variance-boost-strength 2`
+For reference, here is Fidelity <<<<<<<<<<< Appeal scale of various basic tunes:
 
-Simple and to the point: we want to minimize any kind of grain variation, even if it forces the encoder to use lower quantizers and blow up bitrate.
-For even better grain retention, you can sacrifice some consistency by setting `--variance-boost-strength 1`; that will "reserve" some data for higher frequency areas, which are usually grainy areas. Since we're after maximum consistency as well, setting `--variance-octile 5` should also help with preserving grainy texture
-around tones areas (around edges, not edges themselves).
+`--tune 0 --noise-adaptive-filtering 1` < `--tune 0 --noise-adaptive-filtering 2` < `--tune 1`
 
-- `Medium Fidelity (Less demanding content, medium bitrates)`
+### A set of guidelines for high quality encoding in SVT-AV1-PSYEX 3.0.2-B
 
-`--preset X --complex-hvs 1 --crf XX --kf-tf-strength 1 --tf-strength 1 --noise-norm-strength 1 --enable-qm 1 --qm-min 4 --qm-max 15 --chroma-qm-min 10 --chroma-qm-max 15 --keyint 240 --tune 0 --sharpness 1 --filtering-noise-detection 3 --aq-mode 2 --qp-scale-compress-strength 1 --scm 0 --psy-rd 2.0 --variance-boost-strength 2`
+In the previous encoder version SVT-AV1-PSYEX 3.0.2-A, I included various setting recommendations for various encoding scenarios.
+However, it just backfired when I started seeing people using settings outside of their recommended usage guidelines; I also realized that without realizing, I contributed to the practice of cargo-culting by recommending settings
+that only I could imagine and view.
 
-I crank back some of the settings, including psy-rd as well as including `--filtering-noise-detection 3`, which enables restoration filtering at all times
-and tends to help improve image stability. CDEF is still disabled when noise levels are high, since its internal metric (MSE) used to determine strength is still somewhat aggressive.
+For this reason, I'm avoiding recommending definite setting strings from now on. Instead, I'll just provide a few general recommendations down below.
 
-- `Balance of Appeal and Fidelity`
+### 1) ---> Simplicity is key
+If you're doing general encoding or are at the beginning of your encoding journey, I'd just recommend staying with the well tuned defaults 
+and only change things like speed presets (recommended are P2 to P6), CRF and maybe higher psy-rd if everything else fails.
 
-`--preset X --complex-hvs 1 --crf XX --kf-tf-strength 1 --tf-strength 1 --noise-norm-strength 1 --enable-qm 1 --qm-min 4 --qm-max 15 --chroma-qm-min 10 --chroma-qm-max 15 --keyint 240 --tune 0 --sharpness 1 --filtering-noise-detection 2 --aq-mode 2 --qp-scale-compress-strength 1 --scm 0 --psy-rd 1.5 --variance-boost-strength 2`
+### 2) ---> General recommendations for intermediate encoders. 
 
-Psy-rd influence is lowered further, and we disable the CDEF/restoration noise detection algorithm completely; this has the effect of enabling CDEF/restoration
-filtering at all times. This helps tip the balance much further into appeal to preserve those clean lines that most people prefer.
+Note: higher fidelity = sharper with more chances of artifacts, higher appeal = fewer artifacts with more potential for blurriness.
 
-- `High appeal (low bitrates, line preservation, sacrificing some high frequency detail)`
+#### **Higher fidelity at no direct speed cost**
+For sharper, more consistent visuals (with a chance of more artifacts) without slowing the encoder down:
+*   Increase `--psy-rd` strength.
+*   Set `--qm-min 8`
+*   Set `--noise-adaptive-filtering 1`
 
-`--preset X --complex-hvs 1 --crf XX --kf-tf-strength 1 --tf-strength 3 --noise-norm-strength 1 --enable-qm 1 --qm-min 4 --qm-max 15 --chroma-qm-min 8 --chroma-qm-max 15 --keyint 240 --tune 1 --sharpness X --aq-mode 2 --qp-scale-compress-strength 1 --psy-rd 1.0 --sharp-tx 0 --variance-boost-strength 2`
+This will make the encode more consistent and increase visual sharpness, but might introduce more artifacts at the same bitrate; this is usually worth it.
 
-For maximum space savings, this settings string is geared towards more appealing output. We lower psy-rd influence further and disable sharp-tx to make the 
-output less crisp, but keeps artifacts to a minimum. `--psy-rd 1.0 --complex-hvs 1` is still being used to provide higher fidelity output, with the rest of the settings compensating their effects to result in more appealing output.
+For more challenging content, a further quality increase can be achieved with:
+*   `--noise-norm-strength 3` (Default is `1`)
 
-- `BlueSwordM edition (a basis of what I tend to use as a tweakable base)`
+#### **A bit more Consistency over Efficiency**
+For more consistent quality at the expense of compression efficiency:
+*   `--qp-scale-compress-strength 2` (the default is `1`; higher values offer diminishing returns).
 
-`--preset 2 --complex-hvs 1 --crf XX --lp 1 --enable-cdef 0 --noise-norm-strength 3 --enable-qm 1 --qm-min 8 --qm-max 15 --chroma-qm-min 10 --chroma-qm-max 15 --keyint 240 --tune 0 --sharpness 1 --aq-mode 2 --qp-scale-compress-strength 1 --scm 0 --kf-tf-strength 1 --tf-strength 1 --psy-rd 2.0 --variance-boost-strength 2`
+#### **Higher visual quality with a CPU tradeoff**
+For a significant visual quality increase at the cost of more encoding time:
+*   Add `--complex-hvs 1` to the above settings. This enables much higher quality mode decisions, which can greatly increase visual quality in all scenarios when psy-rd is active, particularly at higher strengths.
+*   If using Preset 3 and faster, set `--hbd-mds 1` to get static 10-bit mode decision, increasing visual quality and efficiency at all times.
+*   If using Preset 4 and faster, set `--enable-dlf 2` to increase deblocking filter quality.
 
-While the settings quoted above vary wildly from source to source (I use different settings for movies, episodic releases, and fast gameplay encodes), this is what I use as a basis to encode most of the content that I own. Do know that what I posted isn't very conservative and is biaised somewhat towards high fidelity.
-Variance-boost-strength is the only thing I tend to play with a lot, since some content greatly benefits from higher strength; decreasing octile from the default doesn't seem to help much in dark areas because of psy-rd's high influence combined with `--complex-hvs 1`. However, decreasing it to `--variance-octile 5` can help
-in more varied encoding scenarios, so try it out if you wish to do so.
+#### **Anime Encoding (Minimal Blur)**
+To preserve smooth, clean high quality lines in anime without excessive bitrate:
+*   Keep your high-quality settings and add `--noise-adaptive-filtering 4`.
+    *   This enables noise-adaptive filtering only for restoration, allowing CDEF to clean up lines effectively while retaining grain in more demanding scenarios, where restoration gets effectively disabled.
+
+#### **Extreme Grain Retention (Advanced users only)**
+**Only for content with overwhelming natural or artificial grain (e.g., old films, Breaking Bad or massive artifical grain dumps). Not recommended for clean, modern sources.** Expect large file sizes and slow encodes, particularly if you have natural content from most modern cameras that is relatively clean and doesn't deserve bloat. 
+
+_You have been warned_: don't expect great efficiency with these settings at CRF50 1080p60 natural content. It is also rather slow.
+
+`--preset X --complex-hvs 1 --crf XX --enable-cdef 0 --enable-restoration 0 --enable-tf 0 --spy-rd 1 --noise-norm-strength 3 --qm-min 10 --tune 0 --qp-scale-compress-strength 3 --scm 0 --psy-rd 4.0 --hbd-mds 1`
+    
+If you want much more detailed information, you can just visit the x266 wiki on the subject and expect some future articles on there for a truely profound... deep dive. Sorry for the word play :)
 
 ### Feature Additions
 
@@ -107,16 +126,16 @@ A new progress mode that provides more detailed information about the encoding p
 
 Argument for providing a film grain table for synthetic film grain (similar to aomenc's '--film-grain-table=' argument).
 
-- `Extended CRF`
+- `Extended CRF` (for now, only quarter step CRF has been merged to mainline)
 
 Provides a more versatile and granular way to set CRF. Range has been expanded to 70 (from 63) to help with ultra-low bitrate encodes, and can now be set in quarter-step (0.25) increments.
 
-- `--qp-scale-compress-strength` *0.0 to 8.0*
+- `--qp-scale-compress-strength` *0.0 to 8.0* (**[Merged to Mainline](https://gitlab.com/AOMediaCodec/SVT-AV1/-/commit/bcf7c7fe42d6ef3ba2ffcc465580af2f679ba8a1)**)
 
 Increases video quality temporal consistency, especially with clips that contain film grain and/or contain fast-moving objects.
 The default is **1**, a conservative setting for most content.
 
-- `--enable-dlf 2`
+- `--enable-dlf 2` (**[Merged to Mainline](https://gitlab.com/AOMediaCodec/SVT-AV1/-/commit/e530da138d02fa7f7b338d6ef3e776007eb29b63)**)
 
 Enables a more accurate loop filter that prevents blocking, for a modest increase in compute time (most noticeable at presets 7 to 9).
 This stops being useful at **Preset 3**.
@@ -133,7 +152,7 @@ It was known before as `--frame-luma-bias`
 Enables frame-level luma bias to improve quality in dark scenes by adjusting frame-level QP based on average luminance across each frame.
 The default is **0**.
 
-- `--max-32-tx-size` *0 and 1*
+- `--max-32-tx-size` *0 and 1* (**[Merged to Mainline](https://gitlab.com/AOMediaCodec/SVT-AV1/-/commit/4f0794415e707daa3ce99791158d033be0196d98)**)
 
 Restricts available transform sizes to a maximum of 32x32 pixels. Can help slightly improve detail retention at high fidelity CRFs.
 The default is **0**.
@@ -151,7 +170,7 @@ Set the path to an HDR10+ JSON file for encoding HDR10+ video. SVT-AV1-PSY needs
 
 Manually adjust temporal filtering strength to adjust the trade-off between fewer artifacts in motion and fine detail retention. Each increment is a 2x increase in temporal filtering strength; the default value of 1 is 4x weaker than mainline SVT-AV1's default temporal filter (which would be equivalent to 3 here).
 
-- `--chroma-qm-min` & `--chroma-qm-max` *0 to 15*
+- `--chroma-qm-min` & `--chroma-qm-max` *0 to 15* (**[Merged to Mainline](https://gitlab.com/AOMediaCodec/SVT-AV1/-/commit/4f0794415e707daa3ce99791158d033be0196d98)**)
 
 Set the minimum & maximum quantization matrices for chroma planes. The defaults are 8 and 15, respectively. These options decouple chroma quantization matrix control from the luma quantization matrix options currently available, allowing for more control over chroma quality.
 
@@ -233,18 +252,20 @@ It is not recommended to set `--complex-hvs 1` on presets faster than 6.
 
 Default is **0**.
 
-- `--filtering-noise-detection`
+- `--noise-adaptive-filtering`
 
 This setting controls the noise detection algorithm that turns off CDEF/restoration filtering if the noise level is high enough; this feature is enabled by default
 if you use tune 0/tune 3. By popular request, a member of our community has decided to add this setting to improve visual appeal on less demanding content.
 
-0 follows the default tune behavior, 1 forcefully enables noise detection based CDEF/restoration filtering application, 2 disables noise detection based
-CDEF/restoration filtering application, resulting in CDEF/restoration filtering always being on.
+0 forcefully disables the noise-adaptive CDEF/restoration filters, resulting in CDEF/restoration filtering always being on.
+1 enables noise adaptive CDEF and restoration filters.
 
-3 enables only disables the noise detection algorithm for restoration filtering, enabling restoration filtering at all times.
-4 enables only disables the noise detection algorithm for CDEF, enabling CDEF at all times.
+2 follows default tune beavior
 
-Default is **0**.
+3 only enables noise-adaptive filtering for CDEF, forcing restoration filtering at all times.
+4 only enables noise-adaptive filtering for restoration, enabling CDEF at all times.
+
+Default is **0** to improve the appeal of tune 0.
 
 
 ### Modified Defaults
@@ -253,16 +274,19 @@ SVT-AV1-PSYEX has enhanced defaults versus mainline SVT-AV1 in order to provide 
 
 - Default 10-bit color depth when given a 10-bit input.
 - Disable film grain denoising by default, as it often harms visual fidelity. (**[Merged to Mainline](https://gitlab.com/AOMediaCodec/SVT-AV1/-/commit/8b39b41df9e07bbcdbd19ea618762c5db3353c03)**)
-- Enable quantization matrices by default.
-- Set minimum QM level to 4 by default for more consistent performance that min QM level 0 doesn't offer. It has been increased from 2, as 4 provides the most balanced gains overall.
-- Set minimum chroma QM level to 8 by default to prevent the encoder from picking suboptimal chroma QMs.
-- `--enable-variance-boost` enabled by default.
+- Enable quantization matrices by default through `--enable-qm 1`
+- `--tune 0` has been enabled for higher quality encodes by default
+- `--noise-adaptive-filtering 0` has been enabled to balance the sharpness from tune 0 while still allowing for higher sharpness than tune 1.
+- Set `--qm-min 4` by default for more consistent performance that min QM level 0 doesn't offer. It has been increased from 2, as 4 provides the most balanced gains overall.
+- `--chroma-qm-min 10` has been set by default to greatly increase chroma quality, as the encoder will tend to pick too low chroma QMs otherwise.
+- `--enable-variance-boost 1` enabled by default.
 - `--keyint -2` (the default) uses a ~10s GOP size instead of ~5s.
 - `--sharpness 1` by default to prioritize encoder sharpness.
-- Sharp transform optimizations (`--sharp-tx 1`) are enabled by default to supercharge svt-av1-psy psy-rd optimizations. It is recommended to disable it if you don't use `--psy-rd`, which is set to **1.0** by default.
+- Sharp transform optimizations (`--sharp-tx 1`) are enabled by default to supercharge svt-av1-psy psy-rd optimizations. It is recommended to disable it if you don't use `--psy-rd`.
 - `--tf-strength 1` by default for much lower alt-ref temporal filtering to decrease blur for cleaner encoding.
 - `--kf-tf-strength 1` controls are available to the user and are set to 1 by default to remove KF artifacts.
 - `--psy-rd 1.0` is set on by default. When combined with `--sharp-tx 1`, it makes tune 1 much stronger compared to mainline SVt-AV1.
+- `--qp-scale-compress-strength 1` has been set to increase visual quality consistency.
 
 *We are not in any way affiliated with the Alliance for Open Media or any upstream SVT-AV1 project contributors who have not also contributed here.*
 
